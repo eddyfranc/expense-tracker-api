@@ -44,6 +44,17 @@ export function createApp(): Express {
   // Swagger Documentation
   app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
+  // Root Welcome Endpoint
+  app.get("/", (_req: Request, res: Response) => {
+    res.status(200).json({
+      success: true,
+      message: "Expense Tracker API is running",
+      documentation: "/api/docs",
+      health: "/api/v1/health",
+      version: "1.0.0",
+    });
+  });
+
   // Health Check Endpoint
   app.get("/api/v1/health", async (_req: Request, res: Response) => {
     try {
