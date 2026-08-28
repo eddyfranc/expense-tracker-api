@@ -105,46 +105,59 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ categories
     <div className="view-content">
       {/* Top Filter & Actions Bar */}
       <div className="filter-toolbar">
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <select
-            className="form-select"
-            style={{ width: '160px' }}
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <option value="">All Statuses</option>
-            <option value="active">Active</option>
-            <option value="paused">Paused</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+        <div className="filter-group">
+          {/* Status Filter Tabs */}
+          <div className="auth-tabs" style={{ margin: 0, display: 'inline-flex', width: 'auto' }}>
+            <button
+              className={`auth-tab ${filterStatus === '' ? 'active' : ''}`}
+              style={{ padding: '0.45rem 0.85rem', fontSize: '0.85rem' }}
+              onClick={() => setFilterStatus('')}
+            >
+              All ({subscriptions.length})
+            </button>
+            <button
+              className={`auth-tab ${filterStatus === 'active' ? 'active' : ''}`}
+              style={{ padding: '0.45rem 0.85rem', fontSize: '0.85rem' }}
+              onClick={() => setFilterStatus('active')}
+            >
+              Active ({summary.totalActive})
+            </button>
+            <button
+              className={`auth-tab ${filterStatus === 'paused' ? 'active' : ''}`}
+              style={{ padding: '0.45rem 0.85rem', fontSize: '0.85rem' }}
+              onClick={() => setFilterStatus('paused')}
+            >
+              Paused
+            </button>
+          </div>
         </div>
 
         <button
-          className="btn btn-primary"
+          className="btn btn-primary btn-toolbar-primary"
           onClick={() => {
             setEditingSub(null);
             setIsModalOpen(true);
           }}
         >
           <Plus size={18} />
-          <span>Add Subscription</span>
+          <span>New Subscription</span>
         </button>
       </div>
 
-      {/* KPI Stats */}
+      {/* Summary KPI Cards */}
       <div className="stat-grid">
         <StatCard
-          label="Monthly Recurring Burn"
+          label="Monthly Fixed Burn"
           value={formatCurrency(summary.estimatedMonthlyBurn)}
           icon={Flame}
           iconColor="var(--expense-rose)"
           iconBg="var(--expense-bg)"
-          meta="Estimated fixed monthly commitment"
+          meta="Estimated monthly recurring cost"
           glowBorderColor="var(--expense-border)"
         />
         <StatCard
-          label="Active Subscriptions"
-          value={`${summary.totalActive} Services`}
+          label="Active Commitments"
+          value={`${summary.totalActive} Active`}
           icon={CheckCircle2}
           iconColor="var(--income-green)"
           iconBg="var(--income-bg)"
@@ -193,80 +206,190 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ categories
             </button>
           </div>
         ) : (
-          <div className="table-wrapper">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Subscription</th>
-                  <th>Category</th>
-                  <th>Billing Cycle</th>
-                  <th>Next Billing Date</th>
-                  <th>Status</th>
-                  <th style={{ textAlign: 'right' }}>Cost</th>
-                  <th style={{ textAlign: 'center', width: '130px' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {subscriptions.map((sub) => {
-                  const renewalDate = new Date(sub.nextBillingDate);
-                  const isUpcoming =
-                    sub.status === 'active' &&
-                    renewalDate.getTime() - new Date().getTime() <= 7 * 24 * 60 * 60 * 1000 &&
-                    renewalDate.getTime() >= new Date().getTime();
+          <>
+            {/* Desktop / Tablet Table View */}
+            <div className="table-wrapper desktop-table-view">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Subscription</th>
+                    <th>Category</th>
+                    <th>Billing Cycle</th>
+                    <th>Next Billing Date</th>
+                    <th>Status</th>
+                    <th style={{ textAlign: 'right' }}>Cost</th>
+                    <th style={{ textAlign: 'center', width: '130px' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {subscriptions.map((sub) => {
+                    const renewalDate = new Date(sub.nextBillingDate);
+                    const isUpcoming =
+                      sub.status === 'active' &&
+                      renewalDate.getTime() - new Date().getTime() <= 7 * 24 * 60 * 60 * 1000 &&
+                      renewalDate.getTime() >= new Date().getTime();
 
-                  return (
-                    <tr key={sub.id}>
-                      <td>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontWeight: 700 }}>{sub.name}</span>
-                          {sub.description && (
-                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                              {sub.description}
+                    return (
+                      <tr key={sub.id}>
+                        <td>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontWeight: 700 }}>{sub.name}</span>
+                            {sub.description && (
+                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                {sub.description}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td>
+                          <span className="category-pill">
+                            <span className="color-dot" style={{ background: sub.categoryColor || '#6366f1' }} />
+                            {sub.categoryName}
+                          </span>
+                        </td>
+                        <td>
+                          <span
+                            className="category-pill"
+                            style={{
+                              textTransform: 'capitalize',
+                              background: 'var(--bg-surface)',
+                            }}
+                          >
+                            {sub.billingCycle}
+                          </span>
+                        </td>
+                        <td>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            {renewalDate.toLocaleDateString(undefined, {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })}
+                            {isUpcoming && (
+                              <span
+                                className="category-pill"
+                                style={{
+                                  background: 'var(--warning-bg)',
+                                  color: 'var(--warning-amber)',
+                                  borderColor: 'rgba(245,158,11,0.4)',
+                                  fontSize: '0.7rem',
+                                  padding: '0.1rem 0.4rem',
+                                }}
+                              >
+                                Due Soon
+                              </span>
+                            )}
+                          </span>
+                        </td>
+                        <td>
+                          <span
+                            className="category-pill"
+                            style={{
+                              background: sub.status === 'active' ? 'var(--income-bg)' : 'rgba(255,255,255,0.05)',
+                              color: sub.status === 'active' ? 'var(--income-green)' : 'var(--text-muted)',
+                              borderColor: sub.status === 'active' ? 'var(--income-border)' : 'var(--border-subtle)',
+                              textTransform: 'capitalize',
+                            }}
+                          >
+                            {sub.status}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <span className="amount-expense">
+                            {formatCurrency(sub.amount)}
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '0.2rem' }}>
+                              /{sub.billingCycle === 'yearly' ? 'yr' : sub.billingCycle === 'weekly' ? 'wk' : 'mo'}
                             </span>
-                          )}
-                        </div>
-                      </td>
-                      <td>
-                        <span className="category-pill">
-                          <span className="color-dot" style={{ background: sub.categoryColor || '#6366f1' }} />
-                          {sub.categoryName}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <div style={{ display: 'inline-flex', gap: '0.35rem' }}>
+                            <button
+                              className="btn btn-ghost btn-icon"
+                              style={{ width: '30px', height: '30px' }}
+                              title={sub.status === 'active' ? 'Pause Subscription' : 'Activate Subscription'}
+                              onClick={() => handleToggleStatus(sub)}
+                            >
+                              {sub.status === 'active' ? <Pause size={14} /> : <Play size={14} color="var(--income-green)" />}
+                            </button>
+                            <button
+                              className="btn btn-ghost btn-icon"
+                              style={{ width: '30px', height: '30px' }}
+                              title="Edit Subscription"
+                              onClick={() => {
+                                setEditingSub(sub);
+                                setIsModalOpen(true);
+                              }}
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                            <button
+                              className="btn btn-ghost btn-icon"
+                              style={{ width: '30px', height: '30px', color: 'var(--expense-rose)' }}
+                              title="Delete Subscription"
+                              onClick={() => setDeletingSub(sub)}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card List */}
+            <div className="mobile-card-list">
+              {subscriptions.map((sub) => {
+                const renewalDate = new Date(sub.nextBillingDate);
+                const isUpcoming =
+                  sub.status === 'active' &&
+                  renewalDate.getTime() - new Date().getTime() <= 7 * 24 * 60 * 60 * 1000 &&
+                  renewalDate.getTime() >= new Date().getTime();
+
+                return (
+                  <div key={sub.id} className="mobile-transaction-card">
+                    <div className="mobile-card-top">
+                      <span className="category-pill">
+                        <span className="color-dot" style={{ background: sub.categoryColor || '#6366f1' }} />
+                        {sub.categoryName}
+                      </span>
+                      <span className="amount-expense" style={{ fontSize: '1.05rem' }}>
+                        {formatCurrency(sub.amount)}
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          /{sub.billingCycle === 'yearly' ? 'yr' : sub.billingCycle === 'weekly' ? 'wk' : 'mo'}
                         </span>
-                      </td>
-                      <td>
+                      </span>
+                    </div>
+
+                    <div className="mobile-card-title">
+                      {sub.name}
+                      {isUpcoming && (
                         <span
                           className="category-pill"
                           style={{
-                            textTransform: 'capitalize',
-                            background: 'var(--bg-surface)',
+                            background: 'var(--warning-bg)',
+                            color: 'var(--warning-amber)',
+                            borderColor: 'rgba(245,158,11,0.4)',
+                            fontSize: '0.7rem',
+                            padding: '0.1rem 0.4rem',
+                            marginLeft: '0.4rem',
                           }}
                         >
-                          {sub.billingCycle}
+                          Due Soon
                         </span>
-                      </td>
-                      <td>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                          {renewalDate.toLocaleDateString(undefined, {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })}
-                          {isUpcoming && (
-                            <span
-                              className="category-pill"
-                              style={{
-                                background: 'var(--warning-bg)',
-                                color: 'var(--warning-amber)',
-                                borderColor: 'rgba(245,158,11,0.4)',
-                                fontSize: '0.7rem',
-                                padding: '0.1rem 0.4rem',
-                              }}
-                            >
-                              Due Soon
-                            </span>
-                          )}
-                        </span>
-                      </td>
-                      <td>
+                      )}
+                    </div>
+                    {sub.description && (
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '-0.2rem' }}>
+                        {sub.description}
+                      </div>
+                    )}
+
+                    <div className="mobile-card-bottom">
+                      <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
                         <span
                           className="category-pill"
                           style={{
@@ -274,60 +397,55 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ categories
                             color: sub.status === 'active' ? 'var(--income-green)' : 'var(--text-muted)',
                             borderColor: sub.status === 'active' ? 'var(--income-border)' : 'var(--border-subtle)',
                             textTransform: 'capitalize',
+                            fontSize: '0.75rem',
                           }}
                         >
                           {sub.status}
                         </span>
-                      </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <span className="amount-expense">
-                          {formatCurrency(sub.amount)}
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '0.2rem' }}>
-                            /{sub.billingCycle === 'yearly' ? 'yr' : sub.billingCycle === 'weekly' ? 'wk' : 'mo'}
-                          </span>
+                        <span className="mobile-card-date">
+                          Due {renewalDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                         </span>
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <div style={{ display: 'inline-flex', gap: '0.35rem' }}>
-                          <button
-                            className="btn btn-ghost btn-icon"
-                            style={{ width: '30px', height: '30px' }}
-                            title={sub.status === 'active' ? 'Pause Subscription' : 'Activate Subscription'}
-                            onClick={() => handleToggleStatus(sub)}
-                          >
-                            {sub.status === 'active' ? <Pause size={14} /> : <Play size={14} color="var(--income-green)" />}
-                          </button>
-                          <button
-                            className="btn btn-ghost btn-icon"
-                            style={{ width: '30px', height: '30px' }}
-                            title="Edit Subscription"
-                            onClick={() => {
-                              setEditingSub(sub);
-                              setIsModalOpen(true);
-                            }}
-                          >
-                            <Edit2 size={14} />
-                          </button>
-                          <button
-                            className="btn btn-ghost btn-icon"
-                            style={{ width: '30px', height: '30px', color: 'var(--expense-rose)' }}
-                            title="Delete Subscription"
-                            onClick={() => setDeletingSub(sub)}
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      </div>
+
+                      <div className="mobile-card-actions">
+                        <button
+                          className="btn btn-secondary btn-icon"
+                          style={{ width: '34px', height: '34px' }}
+                          title={sub.status === 'active' ? 'Pause' : 'Activate'}
+                          onClick={() => handleToggleStatus(sub)}
+                        >
+                          {sub.status === 'active' ? <Pause size={14} /> : <Play size={14} color="var(--income-green)" />}
+                        </button>
+                        <button
+                          className="btn btn-secondary btn-icon"
+                          style={{ width: '34px', height: '34px' }}
+                          title="Edit"
+                          onClick={() => {
+                            setEditingSub(sub);
+                            setIsModalOpen(true);
+                          }}
+                        >
+                          <Edit2 size={14} />
+                        </button>
+                        <button
+                          className="btn btn-danger btn-icon"
+                          style={{ width: '34px', height: '34px' }}
+                          title="Delete"
+                          onClick={() => setDeletingSub(sub)}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
 
-      {/* Subscription Modal (Add/Edit) */}
+      {/* Modal: Create/Edit Subscription */}
       <SubscriptionModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -336,13 +454,13 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ categories
         onSubmit={handleCreateOrUpdate}
       />
 
-      {/* Delete Confirmation Modal */}
+      {/* Modal: Confirm Delete */}
       <DeleteConfirmModal
         isOpen={!!deletingSub}
         onClose={() => setDeletingSub(null)}
-        title="Delete Subscription"
-        message={`Are you sure you want to stop tracking "${deletingSub?.name}"?`}
         onConfirm={handleDelete}
+        title="Cancel & Delete Subscription"
+        message={`Are you sure you want to remove subscription "${deletingSub?.name}"?`}
       />
     </div>
   );

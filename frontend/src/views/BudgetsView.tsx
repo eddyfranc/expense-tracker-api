@@ -215,13 +215,7 @@ export const BudgetsView: React.FC<BudgetsViewProps> = ({
             </button>
           </div>
         ) : (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-              gap: '1.25rem',
-            }}
-          >
+          <div className="responsive-grid-auto">
             {budgets.map((budget) => {
               const progressPct = Math.min(100, budget.percentageUsed);
               const isOver = budget.status === 'exceeded';

@@ -283,56 +283,100 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <p>No recent activity found. Start by recording your income or an expense!</p>
           </div>
         ) : (
-          <div className="table-wrapper">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Type</th>
-                  <th>Description</th>
-                  <th>Category / Source</th>
-                  <th>Date</th>
-                  <th style={{ textAlign: 'right' }}>Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {combinedTransactions.map((tx) => (
-                  <tr key={`${tx.type}-${tx.id}`}>
-                    <td>
-                      <span
-                        className="category-pill"
-                        style={{
-                          background: tx.type === 'income' ? 'var(--income-bg)' : 'var(--expense-bg)',
-                          color: tx.type === 'income' ? 'var(--income-green)' : 'var(--expense-rose)',
-                          borderColor: tx.type === 'income' ? 'var(--income-border)' : 'var(--expense-border)',
-                        }}
-                      >
-                        {tx.type === 'income' ? '+' : '-'} {tx.type.toUpperCase()}
-                      </span>
-                    </td>
-                    <td style={{ fontWeight: 600 }}>{tx.title}</td>
-                    <td>
-                      <span className="category-pill">
-                        <span className="color-dot" style={{ background: tx.color }} />
-                        {tx.subtitle}
-                      </span>
-                    </td>
-                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+          <>
+            {/* Desktop / Tablet Table View */}
+            <div className="table-wrapper desktop-table-view">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Category / Source</th>
+                    <th>Date</th>
+                    <th style={{ textAlign: 'right' }}>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {combinedTransactions.map((tx) => (
+                    <tr key={`${tx.type}-${tx.id}`}>
+                      <td>
+                        <span
+                          className="category-pill"
+                          style={{
+                            background: tx.type === 'income' ? 'var(--income-bg)' : 'var(--expense-bg)',
+                            color: tx.type === 'income' ? 'var(--income-green)' : 'var(--expense-rose)',
+                            borderColor: tx.type === 'income' ? 'var(--income-border)' : 'var(--expense-border)',
+                          }}
+                        >
+                          {tx.type === 'income' ? '+' : '-'} {tx.type.toUpperCase()}
+                        </span>
+                      </td>
+                      <td style={{ fontWeight: 600 }}>{tx.title}</td>
+                      <td>
+                        <span className="category-pill">
+                          <span className="color-dot" style={{ background: tx.color }} />
+                          {tx.subtitle}
+                        </span>
+                      </td>
+                      <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                        {new Date(tx.date).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <span className={tx.type === 'income' ? 'amount-income' : 'amount-expense'}>
+                          {tx.type === 'income' ? '+' : '-'} {formatCurrency(tx.amount)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card List */}
+            <div className="mobile-card-list">
+              {combinedTransactions.map((tx) => (
+                <div key={`${tx.type}-${tx.id}`} className="mobile-transaction-card">
+                  <div className="mobile-card-top">
+                    <span
+                      className="category-pill"
+                      style={{
+                        background: tx.type === 'income' ? 'var(--income-bg)' : 'var(--expense-bg)',
+                        color: tx.type === 'income' ? 'var(--income-green)' : 'var(--expense-rose)',
+                        borderColor: tx.type === 'income' ? 'var(--income-border)' : 'var(--expense-border)',
+                      }}
+                    >
+                      {tx.type === 'income' ? '+' : '-'} {tx.type.toUpperCase()}
+                    </span>
+                    <span className={tx.type === 'income' ? 'amount-income' : 'amount-expense'} style={{ fontSize: '1.05rem' }}>
+                      {tx.type === 'income' ? '+' : '-'} {formatCurrency(tx.amount)}
+                    </span>
+                  </div>
+
+                  <div className="mobile-card-title">
+                    {tx.title}
+                  </div>
+
+                  <div className="mobile-card-bottom">
+                    <span className="category-pill" style={{ fontSize: '0.75rem' }}>
+                      <span className="color-dot" style={{ background: tx.color }} />
+                      {tx.subtitle}
+                    </span>
+                    <span className="mobile-card-date">
                       {new Date(tx.date).toLocaleDateString(undefined, {
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric',
                       })}
-                    </td>
-                    <td style={{ textAlign: 'right' }}>
-                      <span className={tx.type === 'income' ? 'amount-income' : 'amount-expense'}>
-                        {tx.type === 'income' ? '+' : '-'} {formatCurrency(tx.amount)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>

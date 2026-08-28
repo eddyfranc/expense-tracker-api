@@ -93,7 +93,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
       showToast('Expense updated successfully!', 'success');
     } else {
       await api.createExpense(data);
-      showToast('Expense added successfully!', 'success');
+      showToast('Expense recorded successfully!', 'success');
     }
     fetchExpenses();
     if (onRefreshData) onRefreshData();
@@ -113,10 +113,10 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
 
   const handleExportCsv = () => {
     if (expenses.length === 0) {
-      showToast('No expense records available to export', 'info');
+      showToast('No expenses to export', 'info');
       return;
     }
-    exportExpensesToCsv(expenses, `finflow-expenses-${new Date().toISOString().slice(0, 10)}.csv`);
+    exportExpensesToCsv(expenses);
     showToast(`Exported ${expenses.length} expenses to CSV!`, 'success');
   };
 
@@ -140,53 +140,53 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
             />
           </div>
 
-          {/* Category Filter */}
-          <select
-            className="form-select"
-            style={{ minWidth: '160px' }}
-            value={selectedCategory}
-            onChange={(e) => {
-              setSelectedCategory(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
-            }}
-          >
-            <option value="">All Categories</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <div className="filter-dropdowns-row">
+            {/* Category Filter */}
+            <select
+              className="form-select filter-select-category"
+              value={selectedCategory}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value);
+                setPagination((prev) => ({ ...prev, page: 1 }));
+              }}
+            >
+              <option value="">All Categories</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
 
-          {/* Sort Order Selector */}
-          <select
-            className="form-select"
-            style={{ minWidth: '150px' }}
-            value={`${sortBy}-${sortOrder}`}
-            onChange={(e) => {
-              const [sb, so] = e.target.value.split('-');
-              setSortBy(sb);
-              setSortOrder(so as 'asc' | 'desc');
-            }}
-          >
-            <option value="expenseDate-desc">Date (Newest First)</option>
-            <option value="expenseDate-asc">Date (Oldest First)</option>
-            <option value="amount-desc">Amount (Highest First)</option>
-            <option value="amount-asc">Amount (Lowest First)</option>
-          </select>
+            {/* Sort Order Selector */}
+            <select
+              className="form-select filter-select-sort"
+              value={`${sortBy}-${sortOrder}`}
+              onChange={(e) => {
+                const [sb, so] = e.target.value.split('-');
+                setSortBy(sb);
+                setSortOrder(so as 'asc' | 'desc');
+              }}
+            >
+              <option value="expenseDate-desc">Newest First</option>
+              <option value="expenseDate-asc">Oldest First</option>
+              <option value="amount-desc">Highest Amount</option>
+              <option value="amount-asc">Lowest Amount</option>
+            </select>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <button className="btn btn-secondary" onClick={handleExportCsv} title="Export to CSV file">
+        <div className="toolbar-actions-row">
+          <button className="btn btn-secondary btn-toolbar-action" onClick={handleExportCsv} title="Export to CSV file">
             <Download size={16} />
-            <span>Export CSV</span>
+            <span>Export</span>
           </button>
-          <button className="btn btn-secondary" onClick={() => setIsCsvModalOpen(true)} title="Import from CSV statement">
+          <button className="btn btn-secondary btn-toolbar-action" onClick={() => setIsCsvModalOpen(true)} title="Import from CSV statement">
             <Upload size={16} />
-            <span>Import CSV</span>
+            <span>Import</span>
           </button>
           <button
-            className="btn btn-expense"
+            className="btn btn-expense btn-toolbar-primary"
             onClick={() => {
               setEditingExpense(null);
               setIsModalOpen(true);
@@ -198,7 +198,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
         </div>
       </div>
 
-      {/* Main Expenses Table */}
+      {/* Main Expenses Container */}
       <div className="glass-card">
         {isLoading ? (
           <div className="empty-state">
@@ -208,7 +208,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
         ) : expenses.length === 0 ? (
           <div className="empty-state">
             <p>No expenses match your filters.</p>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
               <button
                 className="btn btn-expense"
                 onClick={() => {
@@ -224,33 +224,100 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
             </div>
           </div>
         ) : (
-          <div className="table-wrapper">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Category</th>
-                  <th>Description</th>
-                  <th>Date & Time</th>
-                  <th style={{ textAlign: 'right' }}>Amount</th>
-                  <th style={{ textAlign: 'center', width: '100px' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {expenses.map((expense) => (
-                  <tr key={expense.id}>
-                    <td>
-                      <span className="category-pill">
-                        <span
-                          className="color-dot"
-                          style={{ background: expense.category?.color || '#f43f5e' }}
-                        />
-                        {expense.category?.name || 'Uncategorized'}
-                      </span>
-                    </td>
-                    <td style={{ fontWeight: 500 }}>
-                      {expense.description || <span style={{ color: 'var(--text-muted)' }}>No description</span>}
-                    </td>
-                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+          <>
+            {/* Desktop / Tablet Table View */}
+            <div className="table-wrapper desktop-table-view">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Date & Time</th>
+                    <th style={{ textAlign: 'right' }}>Amount</th>
+                    <th style={{ textAlign: 'center', width: '100px' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {expenses.map((expense) => (
+                    <tr key={expense.id}>
+                      <td>
+                        <span className="category-pill">
+                          <span
+                            className="color-dot"
+                            style={{ background: expense.category?.color || '#f43f5e' }}
+                          />
+                          {expense.category?.name || 'Uncategorized'}
+                        </span>
+                      </td>
+                      <td style={{ fontWeight: 500 }}>
+                        {expense.description || <span style={{ color: 'var(--text-muted)' }}>No description</span>}
+                      </td>
+                      <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                        {new Date(expense.expenseDate).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <span className="amount-expense">
+                          -{formatCurrency(expense.amount)}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <div style={{ display: 'inline-flex', gap: '0.35rem' }}>
+                          <button
+                            className="btn btn-ghost btn-icon"
+                            style={{ width: '32px', height: '32px' }}
+                            title="Edit Expense"
+                            onClick={() => {
+                              setEditingExpense(expense);
+                              setIsModalOpen(true);
+                            }}
+                          >
+                            <Edit2 size={15} />
+                          </button>
+                          <button
+                            className="btn btn-ghost btn-icon"
+                            style={{ width: '32px', height: '32px', color: 'var(--expense-rose)' }}
+                            title="Delete Expense"
+                            onClick={() => setDeletingExpense(expense)}
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Touch-Optimized Card List View */}
+            <div className="mobile-card-list">
+              {expenses.map((expense) => (
+                <div key={expense.id} className="mobile-transaction-card">
+                  <div className="mobile-card-top">
+                    <span className="category-pill">
+                      <span
+                        className="color-dot"
+                        style={{ background: expense.category?.color || '#f43f5e' }}
+                      />
+                      {expense.category?.name || 'Uncategorized'}
+                    </span>
+                    <span className="amount-expense" style={{ fontSize: '1.05rem' }}>
+                      -{formatCurrency(expense.amount)}
+                    </span>
+                  </div>
+
+                  <div className="mobile-card-title">
+                    {expense.description || 'No description'}
+                  </div>
+
+                  <div className="mobile-card-bottom">
+                    <span className="mobile-card-date">
                       {new Date(expense.expenseDate).toLocaleDateString(undefined, {
                         month: 'short',
                         day: 'numeric',
@@ -258,80 +325,68 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
                         hour: '2-digit',
                         minute: '2-digit',
                       })}
-                    </td>
-                    <td style={{ textAlign: 'right' }}>
-                      <span className="amount-expense">
-                        -{formatCurrency(expense.amount)}
-                      </span>
-                    </td>
-                    <td style={{ textAlign: 'center' }}>
-                      <div style={{ display: 'inline-flex', gap: '0.35rem' }}>
-                        <button
-                          className="btn btn-ghost btn-icon"
-                          style={{ width: '32px', height: '32px' }}
-                          title="Edit Expense"
-                          onClick={() => {
-                            setEditingExpense(expense);
-                            setIsModalOpen(true);
-                          }}
-                        >
-                          <Edit2 size={15} />
-                        </button>
-                        <button
-                          className="btn btn-ghost btn-icon"
-                          style={{ width: '32px', height: '32px', color: 'var(--expense-rose)' }}
-                          title="Delete Expense"
-                          onClick={() => setDeletingExpense(expense)}
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                    </span>
 
-        {/* Pagination Bar */}
-        {pagination.totalPages > 1 && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              paddingTop: '1.25rem',
-              marginTop: '0.5rem',
-            }}
-          >
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              Showing {expenses.length} of {pagination.totalItems} entries
-            </span>
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <button
-                className="btn btn-secondary btn-icon"
-                disabled={!pagination.hasPrevPage}
-                onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, padding: '0 0.5rem' }}>
-                Page {pagination.page} of {pagination.totalPages}
-              </span>
-              <button
-                className="btn btn-secondary btn-icon"
-                disabled={!pagination.hasNextPage}
-                onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
-              >
-                <ChevronRight size={18} />
-              </button>
+                    <div className="mobile-card-actions">
+                      <button
+                        className="btn btn-secondary btn-icon"
+                        style={{ width: '34px', height: '34px' }}
+                        title="Edit Expense"
+                        onClick={() => {
+                          setEditingExpense(expense);
+                          setIsModalOpen(true);
+                        }}
+                      >
+                        <Edit2 size={15} />
+                      </button>
+                      <button
+                        className="btn btn-danger btn-icon"
+                        style={{ width: '34px', height: '34px' }}
+                        title="Delete Expense"
+                        onClick={() => setDeletingExpense(expense)}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
+
+            {/* Pagination Controls */}
+            <div className="pagination-bar">
+              <span className="pagination-info">
+                Showing {Math.min(pagination.totalItems, (pagination.page - 1) * pagination.limit + 1)} -{' '}
+                {Math.min(pagination.totalItems, pagination.page * pagination.limit)} of {pagination.totalItems} records
+              </span>
+
+              <div className="pagination-buttons">
+                <button
+                  className="btn btn-secondary"
+                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
+                  disabled={!pagination.hasPrevPage}
+                  onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}
+                >
+                  <ChevronLeft size={16} /> Prev
+                </button>
+                <span className="pagination-page-label">
+                  Page {pagination.page} / {pagination.totalPages || 1}
+                </span>
+                <button
+                  className="btn btn-secondary"
+                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
+                  disabled={!pagination.hasNextPage}
+                  onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
+                >
+                  Next <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
 
-      {/* Transaction Modal (Add / Edit) */}
+      {/* Modal: Create/Edit Expense */}
       <TransactionModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -341,26 +396,25 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
         onSubmitExpense={handleCreateOrUpdate}
       />
 
-      {/* CSV Statement Importer Modal */}
+      {/* Modal: CSV Statement Import */}
       <CsvImportModal
         isOpen={isCsvModalOpen}
         onClose={() => setIsCsvModalOpen(false)}
         mode="expense"
         categories={categories}
         onImportComplete={() => {
-          showToast('CSV statement imported successfully!', 'success');
           fetchExpenses();
           if (onRefreshData) onRefreshData();
         }}
       />
 
-      {/* Delete Confirmation Modal */}
+      {/* Modal: Confirm Delete */}
       <DeleteConfirmModal
         isOpen={!!deletingExpense}
         onClose={() => setDeletingExpense(null)}
-        title="Delete Expense"
-        message={`Are you sure you want to permanently delete this expense of ${deletingExpense ? formatCurrency(deletingExpense.amount) : ''}?`}
         onConfirm={handleDelete}
+        title="Delete Expense Record"
+        message={`Are you sure you want to delete this expense of ${deletingExpense ? formatCurrency(deletingExpense.amount) : ''}? This action cannot be undone.`}
       />
     </div>
   );

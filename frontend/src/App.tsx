@@ -4,6 +4,7 @@ import { NotificationProvider, useNotification } from './context/NotificationCon
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Sidebar, type NavTab } from './components/Sidebar';
 import { Navbar } from './components/Navbar';
+import { BottomNav } from './components/BottomNav';
 import { TransactionModal } from './components/TransactionModal';
 import { AuthView } from './views/AuthView';
 import { DashboardView } from './views/DashboardView';
@@ -26,6 +27,9 @@ const MainLayout: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<NavTab>('dashboard');
   const [selectedYear, setSelectedYear] = useState<number>(now.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState<number>(now.getMonth() + 1);
+
+  // Mobile Drawer State
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
 
   // Categories cache
   const [categories, setCategories] = useState<Category[]>([]);
@@ -98,8 +102,13 @@ const MainLayout: React.FC = () => {
 
   return (
     <div className="app-container">
-      {/* Sidebar */}
-      <Sidebar currentTab={currentTab} onTabChange={setCurrentTab} />
+      {/* Sidebar (Desktop sticky & Mobile slide-out drawer) */}
+      <Sidebar
+        currentTab={currentTab}
+        onTabChange={setCurrentTab}
+        isOpen={isMobileSidebarOpen}
+        onClose={() => setIsMobileSidebarOpen(false)}
+      />
 
       {/* Main Content Area */}
       <div className="main-content">
@@ -111,9 +120,10 @@ const MainLayout: React.FC = () => {
           selectedMonth={selectedMonth}
           onYearChange={setSelectedYear}
           onMonthChange={setSelectedMonth}
+          onToggleSidebar={() => setIsMobileSidebarOpen((prev) => !prev)}
         />
 
-        <main key={`${currentTab}-${refreshTrigger}`}>
+        <main className="main-scroll-area" key={`${currentTab}-${refreshTrigger}`}>
           {currentTab === 'dashboard' && (
             <DashboardView
               selectedYear={selectedYear}
@@ -170,6 +180,13 @@ const MainLayout: React.FC = () => {
 
           {currentTab === 'settings' && <SettingsView />}
         </main>
+
+        {/* Mobile Phone Bottom Navigation */}
+        <BottomNav
+          currentTab={currentTab}
+          onTabChange={setCurrentTab}
+          onOpenMobileMenu={() => setIsMobileSidebarOpen(true)}
+        />
       </div>
 
       {/* Quick Global Expense Modal */}

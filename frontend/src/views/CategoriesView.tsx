@@ -94,13 +94,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
             </button>
           </div>
         ) : (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-              gap: '1.25rem',
-            }}
-          >
+          <div className="responsive-grid-auto">
             {userCategories.map((cat) => (
               <div key={cat.id} className="glass-card" style={{ padding: '1.25rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
@@ -169,13 +163,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
           Standard System Categories ({systemCategories.length})
         </h3>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-            gap: '1.25rem',
-          }}
-        >
+        <div className="responsive-grid-auto">
           {systemCategories.map((cat) => (
             <div key={cat.id} className="glass-card" style={{ padding: '1.25rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>

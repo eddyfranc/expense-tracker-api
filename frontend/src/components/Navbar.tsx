@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowDownRight, ArrowUpRight } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, Menu } from 'lucide-react';
 import type { NavTab } from './Sidebar';
 
 interface NavbarProps {
@@ -10,6 +10,7 @@ interface NavbarProps {
   selectedMonth: number;
   onYearChange: (year: number) => void;
   onMonthChange: (month: number) => void;
+  onToggleSidebar?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -20,14 +21,15 @@ export const Navbar: React.FC<NavbarProps> = ({
   selectedMonth,
   onYearChange,
   onMonthChange,
+  onToggleSidebar,
 }) => {
   const titles: Record<NavTab, { title: string; subtitle: string }> = {
     dashboard: {
-      title: 'Dashboard Overview',
+      title: 'Dashboard',
       subtitle: 'Real-time financial summary and cash flow tracking',
     },
     expenses: {
-      title: 'Expense Tracker',
+      title: 'Expenses',
       subtitle: 'Manage and categorize your personal spending',
     },
     income: {
@@ -39,16 +41,16 @@ export const Navbar: React.FC<NavbarProps> = ({
       subtitle: 'Customize spending buckets, colors, and icons',
     },
     budgets: {
-      title: 'Monthly Budgets & Limits',
+      title: 'Budgets & Limits',
       subtitle: 'Set category spending limits and monitor budget health',
     },
     subscriptions: {
-      title: 'Recurring Subscriptions & Bills',
+      title: 'Subscriptions',
       subtitle: 'Track fixed commitments and upcoming renewals',
     },
     reports: {
-      title: 'Analytics & Reports',
-      subtitle: 'Monthly comparisons, savings rate, and category distribution',
+      title: 'Reports & Analytics',
+      subtitle: 'Monthly comparisons, savings rate, and breakdown',
     },
     settings: {
       title: 'Account Settings',
@@ -59,8 +61,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   const currentInfo = titles[currentTab] || { title: 'Overview', subtitle: '' };
 
   const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
   ];
 
   const currentYearNum = new Date().getFullYear();
@@ -69,7 +71,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="top-navbar">
       <div className="top-navbar-left">
-        <div>
+        {/* Mobile Hamburger Toggle */}
+        <button
+          className="btn btn-ghost btn-icon mobile-menu-btn"
+          onClick={onToggleSidebar}
+          aria-label="Toggle navigation menu"
+        >
+          <Menu size={22} />
+        </button>
+
+        <div className="navbar-titles">
           <h1 className="view-title">{currentInfo.title}</h1>
           <p className="view-subtitle">{currentInfo.subtitle}</p>
         </div>
@@ -78,12 +89,12 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="top-navbar-right">
         {/* Month / Year Selectors */}
         {(currentTab === 'dashboard' || currentTab === 'reports' || currentTab === 'budgets') && (
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <div className="navbar-date-selectors">
             <select
-              className="form-select"
-              style={{ width: '130px', padding: '0.45rem 0.75rem', fontSize: '0.85rem' }}
+              className="form-select navbar-month-select"
               value={selectedMonth}
               onChange={(e) => onMonthChange(Number(e.target.value))}
+              aria-label="Select month"
             >
               {months.map((m, idx) => (
                 <option key={m} value={idx + 1}>
@@ -92,10 +103,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               ))}
             </select>
             <select
-              className="form-select"
-              style={{ width: '90px', padding: '0.45rem 0.75rem', fontSize: '0.85rem' }}
+              className="form-select navbar-year-select"
               value={selectedYear}
               onChange={(e) => onYearChange(Number(e.target.value))}
+              aria-label="Select year"
             >
               {years.map((y) => (
                 <option key={y} value={y}>
@@ -107,22 +118,24 @@ export const Navbar: React.FC<NavbarProps> = ({
         )}
 
         {/* Quick Action Buttons */}
-        <button
-          className="btn btn-expense"
-          onClick={onOpenExpenseModal}
-          title="Add new expense transaction"
-        >
-          <ArrowDownRight size={16} />
-          <span>Expense</span>
-        </button>
-        <button
-          className="btn btn-income"
-          onClick={onOpenIncomeModal}
-          title="Add new income transaction"
-        >
-          <ArrowUpRight size={16} />
-          <span>Income</span>
-        </button>
+        <div className="navbar-action-buttons">
+          <button
+            className="btn btn-expense btn-quick-action"
+            onClick={onOpenExpenseModal}
+            title="Add new expense transaction"
+          >
+            <ArrowDownRight size={16} />
+            <span className="btn-label-text">Expense</span>
+          </button>
+          <button
+            className="btn btn-income btn-quick-action"
+            onClick={onOpenIncomeModal}
+            title="Add new income transaction"
+          >
+            <ArrowUpRight size={16} />
+            <span className="btn-label-text">Income</span>
+          </button>
+        </div>
       </div>
     </header>
   );
